@@ -89,10 +89,8 @@ check_ver_comparison(){
 
 Download(){
 	echo -e "${Info} 开始下载最新版本！"
-	mkdir /usr/local/mtproxy-go
-	LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/9seconds/mtg/releases/lastest)
-	LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
-	ARTIFACT_URL="https://github.com/9seconds/mtg/releases/download/$LATEST_VERSION/mtg-linux-amd64"
+	mkdir /usr/local/mtproxy-go	
+	ARTIFACT_URL="https://github.com/9seconds/mtg/releases/download/v1.0.7/mtg-linux-amd64"
 	wget --no-check-certificate -O ${mtproxy_file} $ARTIFACT_URL
 	chmod +x ${mtproxy_file}
 }
