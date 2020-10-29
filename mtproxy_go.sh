@@ -92,61 +92,14 @@ check_ver_comparison(){
 	fi
 }
 Download(){
-	echo -e "${Info} 开始检查依赖软件！"
-	if [[ ${release} == "centos" ]]; then
-		yum install git gcc automake autoconf libtool make -y
-	else
-		apt-get install git gcc automake autoconf libtool make -y
-	fi
-	if [[ ! -e "${file}" ]]; then
-		mkdir "${file}"
-	else
-		[[ -e "${mtproxy_file}" ]] && rm -rf "${mtproxy_file}"
-	fi
-	cd "${file}"
-	if [[ ${bit} == "x86_64" ]]; then
-		bit="amd64"
-	elif [[ ${bit} == "i386" || ${bit} == "i686" ]]; then
-		bit="386"
-	else
-		bit="arm"
-	fi
-	echo -e "${Info} 开始检查编译环境！"
-	if [[ ! -e "/tmp/go/VERSION" ]]; then
-		echo -e "${Info} 开始安装编译环境！"
-		go_download_link=$(wget -qO- "https://golang.org/dl/" | sed -n '/class="download downloadBox"/,+1 s/.*href="\([^"]*\).*$/\1/p' | grep "linux-amd64")
-		wget -N --no-check-certificate ${go_download_link}
-		tar -xf go*linux-amd64.tar.gz && rm -f go*linux-amd64.tar.gz
-		mv go /tmp/go
-		export GOROOT=/tmp/go
-		export GOPATH=${file}
-		export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-		[[ ! -e "/tmp/go/VERSION" ]] && echo -e "${Error} go 安装失败 !" && rm -rf "/tmp/go" && exit 1
-		echo -e "${Info} go 安装完成 版本:\c" && cat "/tmp/go/VERSION" && echo -e " "
-	else
-		export GOROOT=/tmp/go
-		export GOPATH=${file}
-		export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-		echo -e "${Info} go 已安装 版本:\c" && cat "/tmp/go/VERSION" && echo -e " "
-	fi
-	echo -e "${Info} 开始拉取 mtproxy-go 源码 时间较长请耐心等待"
-	git clone -b master https://github.com/9seconds/mtg.git src
-	cd "${file}/src"
-	go mod download 
-	echo -e "${Info} 开始编译 mtproxy-go 源码 时间较长请耐心等待"
-	make
-	if [[ ! -e "${file}/src/mtg" ]]; then
-		echo -e "${Error} MTProxy 编译失败 !"
-		rm -rf "${file}" && exit 1
-	else
-		mv "mtg" "${file}/mtg"
-	fi
-	cd "${file}"
-	[[ ! -e "mtg" ]] && echo -e "${Error} MTProxy 重命名失败 !" && rm -rf "${file}" && exit 1
-	rm -rf "${file}/src" && rm -rf "${file}/go" && rm -rf "${file}/pkg"
-	chmod +x mtg
-	echo "${new_ver}" > ${Now_ver_File}
+	echo -e "${Info} 开始下载最新版本！"
+	LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/9seconds/mtg/releases/lastest)
+	LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+	ARTIFACT_URL="https://github.com/9seconds/mtg/releases/download/$LATEST_VERSION/mtg-linux-amd64"
+	wget --no-check-certificate -O ${file} $ARTIFACT_URL
+	chmod +x ${file}
 }
+
 Service(){
 	if [[ ${release} = "centos" ]]; then
 		if ! wget --no-check-certificate "https://raw.githubusercontent.com/whunt1/onekeymakemtg/master/mtproxy_go_centos" -O /etc/init.d/mtproxy-go; then
