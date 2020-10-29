@@ -67,11 +67,7 @@ check_crontab_installed_status(){
 check_pid(){
 	PID=$(ps -ef| grep "./mtg "| grep -v "grep" | grep -v "init.d" |grep -v "service" |awk '{print $2}')
 }
-check_new_ver(){
-	new_ver=$(wget -qO- https://api.github.com/repos/9seconds/mtg/commits | grep "sha"| head -n 1| awk -F ":" '{print $2}'| sed 's/\"//g;s/,//g;s/ //g')
-	[[ -z ${new_ver} ]] && echo -e "${Error} MTProxy 最新版本获取失败！" && exit 1
-	echo -e "${Info} 检测到 MTProxy 最新版本为 [ ${new_ver} ]"
-}
+
 check_ver_comparison(){
 	now_ver=$(cat ${Now_ver_File})
 	if [[ "${now_ver}" != "${new_ver}" ]]; then
@@ -82,7 +78,6 @@ check_ver_comparison(){
 			check_pid
 			[[ ! -z $PID ]] && kill -9 ${PID}
 			\cp "${mtproxy_conf}" "/tmp/mtproxy.conf"
-			rm -rf ${file}
 			Download
 			mv "/tmp/mtproxy.conf" "${mtproxy_conf}"
 			Start
@@ -91,6 +86,7 @@ check_ver_comparison(){
 		echo -e "${Info} 当前 MTProxy 已是最新版本 [ ${new_ver} ]" && exit 1
 	fi
 }
+
 Download(){
 	echo -e "${Info} 开始下载最新版本！"
 	mkdir /usr/local/mtproxy-go
@@ -363,7 +359,6 @@ Install(){
 	echo -e "${Info} 开始安装/配置 依赖..."
 	Installation_dependency
 	echo -e "${Info} 开始下载/安装..."
-	check_new_ver
 	Download
 	echo -e "${Info} 开始下载/安装 服务脚本(init)..."
 	Service
@@ -375,12 +370,6 @@ Install(){
 	Set_secure
 	echo -e "${Info} 开始写入 配置文件..."
 	Write_config
-	echo -e "${Info} 开始设置 iptables防火墙..."
-	Set_iptables
-	echo -e "${Info} 开始添加 iptables防火墙规则..."
-	Add_iptables
-	echo -e "${Info} 开始保存 iptables防火墙规则..."
-	Save_iptables
 	echo -e "${Info} 所有步骤 安装完毕，开始启动..."
 	Start
 }
@@ -410,7 +399,6 @@ Restart(){
 }
 Update(){
 	check_installed_status
-	check_new_ver
 	check_ver_comparison
 }
 Uninstall(){
